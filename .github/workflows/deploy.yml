@@ -28,9 +28,10 @@ jobs:
           push: true
           tags: ghcr.io/anmytony/switchgear-extraction:latest
 
-      - name: Build and push .NET backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend/SwitchgearApi
-          push: true
-          tags: ghcr.io/anmytony/switchgear-backend:latest
+      # .NET build temporarily disabled — fix build errors first
+      # - name: Build and push .NET backend image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: ./backend/SwitchgearApi
+      #     push: true
+      #     tags: ghcr.io/anmytony/switchgear-backend:latest
