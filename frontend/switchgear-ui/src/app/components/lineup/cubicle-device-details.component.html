@@ -1,0 +1,340 @@
+<div class="device-details-panel">
+  @if (!cubicle) {
+    <div class="empty-state">
+      <p>Select a panel to view device parameters</p>
+    </div>
+  } @else {
+    <div class="device-details-header">
+      <h3>{{ panelLabel ?? 'Panel ' + cubicle.position }}</h3>
+      @if (cubicle.functionalPosition) {
+        <p class="functional-pos">{{ cubicle.functionalPosition }}</p>
+      }
+      @if (cubicle.panelType) {
+        <span class="panel-type-badge">{{ cubicle.panelType }}</span>
+      }
+    </div>
+
+    <div class="device-cards">
+
+      <!-- CIRCUIT BREAKER -->
+      @if (cubicle.circuitBreaker.model.value || cubicle.circuitBreaker.rating.value || cubicle.circuitBreaker.breakingCapacity?.value) {
+        <div class="device-card">
+          <div class="card-header">
+            <span class="card-title">Circuit Breaker</span>
+          </div>
+          <div class="card-body">
+            <div class="param-row">
+              <label>Model</label>
+              <div class="param-value">
+                <span class="value">{{ cubicle.circuitBreaker.model.value || '—' }}</span>
+                <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.circuitBreaker.model.confidence)">
+                  {{ confidenceLabel(cubicle.circuitBreaker.model.confidence) }}
+                  <span class="score">({{ (cubicle.circuitBreaker.model.confidence * 100).toFixed(0) }}%)</span>
+                </span>
+                <span class="source-label">{{ cubicle.circuitBreaker.model.source }}</span>
+              </div>
+            </div>
+            <div class="param-row">
+              <label>Rating</label>
+              <div class="param-value">
+                <span class="value">{{ cubicle.circuitBreaker.rating.value || '—' }}</span>
+                <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.circuitBreaker.rating.confidence)">
+                  {{ confidenceLabel(cubicle.circuitBreaker.rating.confidence) }}
+                  <span class="score">({{ (cubicle.circuitBreaker.rating.confidence * 100).toFixed(0) }}%)</span>
+                </span>
+              </div>
+            </div>
+            @if (cubicle.circuitBreaker.breakingCapacity?.value) {
+              <div class="param-row">
+                <label>Breaking Capacity</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.circuitBreaker.breakingCapacity!.value }}</span>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.circuitBreaker.breakingCapacity!.confidence)">
+                    {{ confidenceLabel(cubicle.circuitBreaker.breakingCapacity!.confidence) }}
+                  </span>
+                </div>
+              </div>
+            }
+            @if (cubicle.circuitBreaker.makingCapacity?.value) {
+              <div class="param-row">
+                <label>Making Capacity</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.circuitBreaker.makingCapacity!.value }}</span>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.circuitBreaker.makingCapacity!.confidence)">
+                    {{ confidenceLabel(cubicle.circuitBreaker.makingCapacity!.confidence) }}
+                  </span>
+                </div>
+              </div>
+            }
+            @if (cubicle.circuitBreaker.mechanismType?.value) {
+              <div class="param-row">
+                <label>Mechanism</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.circuitBreaker.mechanismType!.value }}</span>
+                </div>
+              </div>
+            }
+            @if (cubicle.circuitBreaker.numberOfPoles?.value) {
+              <div class="param-row">
+                <label>Poles</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.circuitBreaker.numberOfPoles!.value }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- CURRENT TRANSFORMER -->
+      @if (cubicle.currentTransformer.ratio.value) {
+        <div class="device-card">
+          <div class="card-header">
+            <span class="card-title">Current Transformer (CT)</span>
+          </div>
+          <div class="card-body">
+            <div class="param-row">
+              <label>Ratio</label>
+              <div class="param-value">
+                <span class="value">{{ cubicle.currentTransformer.ratio.value || '—' }}</span>
+                <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.currentTransformer.ratio.confidence)">
+                  {{ confidenceLabel(cubicle.currentTransformer.ratio.confidence) }}
+                  <span class="score">({{ (cubicle.currentTransformer.ratio.confidence * 100).toFixed(0) }}%)</span>
+                </span>
+                <span class="source-label">{{ cubicle.currentTransformer.ratio.source }}</span>
+              </div>
+            </div>
+            @if (cubicle.currentTransformer.accuracyClass?.value) {
+              <div class="param-row">
+                <label>Accuracy Class</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.currentTransformer.accuracyClass!.value }}</span>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.currentTransformer.accuracyClass!.confidence)">
+                    {{ confidenceLabel(cubicle.currentTransformer.accuracyClass!.confidence) }}
+                  </span>
+                </div>
+              </div>
+            }
+            @if (cubicle.currentTransformer.burden?.value) {
+              <div class="param-row">
+                <label>Burden</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.currentTransformer.burden!.value }}</span>
+                </div>
+              </div>
+            }
+            @if (cubicle.currentTransformer.coreType?.value) {
+              <div class="param-row">
+                <label>Core Type</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.currentTransformer.coreType!.value }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- VOLTAGE TRANSFORMER -->
+      @if (cubicle.voltageTransformer.ratio.value) {
+        <div class="device-card">
+          <div class="card-header">
+            <span class="card-title">Voltage Transformer (VT)</span>
+          </div>
+          <div class="card-body">
+            <div class="param-row">
+              <label>Ratio</label>
+              <div class="param-value">
+                <span class="value">{{ cubicle.voltageTransformer.ratio.value || '—' }}</span>
+                <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.voltageTransformer.ratio.confidence)">
+                  {{ confidenceLabel(cubicle.voltageTransformer.ratio.confidence) }}
+                  <span class="score">({{ (cubicle.voltageTransformer.ratio.confidence * 100).toFixed(0) }}%)</span>
+                </span>
+                <span class="source-label">{{ cubicle.voltageTransformer.ratio.source }}</span>
+              </div>
+            </div>
+            @if (cubicle.voltageTransformer.accuracyClass?.value) {
+              <div class="param-row">
+                <label>Accuracy Class</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.voltageTransformer.accuracyClass!.value }}</span>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.voltageTransformer.accuracyClass!.confidence)">
+                    {{ confidenceLabel(cubicle.voltageTransformer.accuracyClass!.confidence) }}
+                  </span>
+                </div>
+              </div>
+            }
+            @if (cubicle.voltageTransformer.burden?.value) {
+              <div class="param-row">
+                <label>Burden</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.voltageTransformer.burden!.value }}</span>
+                </div>
+              </div>
+            }
+            @if (cubicle.voltageTransformer.insulationLevel?.value) {
+              <div class="param-row">
+                <label>Insulation Level</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.voltageTransformer.insulationLevel!.value }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- PROTECTION RELAY -->
+      @if (cubicle.protectionRelay.model.value) {
+        <div class="device-card">
+          <div class="card-header">
+            <span class="card-title">Protection Relay</span>
+          </div>
+          <div class="card-body">
+            <div class="param-row">
+              <label>Model</label>
+              <div class="param-value">
+                <span class="value">{{ cubicle.protectionRelay.model.value || '—' }}</span>
+                <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.protectionRelay.model.confidence)">
+                  {{ confidenceLabel(cubicle.protectionRelay.model.confidence) }}
+                  <span class="score">({{ (cubicle.protectionRelay.model.confidence * 100).toFixed(0) }}%)</span>
+                </span>
+                <span class="source-label">{{ cubicle.protectionRelay.model.source }}</span>
+              </div>
+            </div>
+            @if (cubicle.protectionRelay.protectionFunctions && cubicle.protectionRelay.protectionFunctions.length > 0) {
+              <div class="param-row">
+                <label>Protection Functions</label>
+                <div class="param-value">
+                  <div class="protection-functions">
+                    @for (func of cubicle.protectionRelay.protectionFunctions; track func) {
+                      <span class="prot-badge">{{ func }}</span>
+                    }
+                  </div>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.protectionRelay.protectionFunctionsConfidence)">
+                    {{ confidenceLabel(cubicle.protectionRelay.protectionFunctionsConfidence) }}
+                    <span class="score">({{ (cubicle.protectionRelay.protectionFunctionsConfidence * 100).toFixed(0) }}%)</span>
+                  </span>
+                  <span class="source-label">{{ cubicle.protectionRelay.protectionFunctionsSource }}</span>
+                </div>
+              </div>
+            }
+            @if (cubicle.protectionRelay.auxVoltage?.value) {
+              <div class="param-row">
+                <label>Aux Voltage</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.protectionRelay.auxVoltage!.value }}</span>
+                </div>
+              </div>
+            }
+            @if (cubicle.protectionRelay.communicationProtocol && cubicle.protectionRelay.communicationProtocol.length > 0) {
+              <div class="param-row">
+                <label>Communication</label>
+                <div class="param-value">
+                  <div class="protection-functions">
+                    @for (proto of cubicle.protectionRelay.communicationProtocol; track proto) {
+                      <span class="prot-badge prot-badge--comm">{{ proto }}</span>
+                    }
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- DISCONNECTOR -->
+      @if (cubicle.disconnector?.count?.value || cubicle.disconnector?.operatingMode?.value) {
+        <div class="device-card">
+          <div class="card-header">
+            <span class="card-title">Disconnector / Isolator</span>
+          </div>
+          <div class="card-body">
+            @if (cubicle.disconnector.count?.value) {
+              <div class="param-row">
+                <label>Count</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.disconnector.count!.value }}</span>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.disconnector.count!.confidence)">
+                    {{ confidenceLabel(cubicle.disconnector.count!.confidence) }}
+                  </span>
+                </div>
+              </div>
+            }
+            @if (cubicle.disconnector.operatingMode?.value) {
+              <div class="param-row">
+                <label>Operating Mode</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.disconnector.operatingMode!.value }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- EARTHING SWITCH -->
+      @if (cubicle.earthingSwitch?.present) {
+        <div class="device-card device-card--present">
+          <div class="card-header">
+            <span class="card-title">Earthing Switch</span>
+            <span class="present-badge">Present</span>
+          </div>
+          <div class="card-body">
+            @if (cubicle.earthingSwitch.id?.value) {
+              <div class="param-row">
+                <label>ID</label>
+                <div class="param-value">
+                  <span class="value">{{ cubicle.earthingSwitch.id!.value }}</span>
+                  <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.earthingSwitch.id!.confidence)">
+                    {{ confidenceLabel(cubicle.earthingSwitch.id!.confidence) }}
+                  </span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- SURGE ARRESTER -->
+      @if (cubicle.surgeArrester?.present) {
+        <div class="device-card device-card--present">
+          <div class="card-header">
+            <span class="card-title">Surge Arrester</span>
+            <span class="present-badge">Present</span>
+          </div>
+        </div>
+      }
+
+      <!-- AUXILIARY / CONTROL -->
+      @if (cubicle.auxiliary?.controlVoltage?.value) {
+        <div class="device-card">
+          <div class="card-header">
+            <span class="card-title">Auxiliary / Control</span>
+          </div>
+          <div class="card-body">
+            <div class="param-row">
+              <label>Control Voltage</label>
+              <div class="param-value">
+                <span class="value">{{ cubicle.auxiliary.controlVoltage!.value }}</span>
+                <span class="confidence-badge" [ngClass]="confidenceClass(cubicle.auxiliary.controlVoltage!.confidence)">
+                  {{ confidenceLabel(cubicle.auxiliary.controlVoltage!.confidence) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- NO DATA NOTICE -->
+      @if (!hasData()) {
+        <div class="no-data-notice">
+          <p>No device parameters were extracted for this panel.</p>
+          <p class="no-data-hint">Detailed parameters (CT/VT ratios, relay model) are extracted from SLD images and cubicle schedule tables.</p>
+        </div>
+      }
+
+
+    </div>
+  }
+</div>

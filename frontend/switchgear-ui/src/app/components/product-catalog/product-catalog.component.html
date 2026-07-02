@@ -1,0 +1,272 @@
+<div class="catalog-page">
+
+  <!-- Header -->
+  <div class="catalog-header">
+    <div class="catalog-header__text">
+      <h2 class="catalog-header__title">
+        ABB Switchgear Catalog
+        <span class="live-badge" title="Data fetched live from ABB Sales Configurator API">Live</span>
+      </h2>
+      <p class="catalog-header__subtitle">
+        All {{ totalCount() }} products in the ABB medium-voltage switchgear catalog
+        @if (hasParameters()) {
+          — scored against your extracted configuration parameters.
+        } @else {
+          . Upload and process an RFQ to see match scores.
+        }
+      </p>
+    </div>
+
+    @if (loadState() === 'loaded') {
+      <div class="catalog-header__stats">
+        @if (hasParameters()) {
+          <span class="stat stat--recommended">★ {{ recommendedCount() }} recommended</span>
+          <span class="stat stat--compatible">✓ {{ compatibleCount() }} compatible</span>
+        }
+        <span class="stat stat--total">{{ filtered().length }} shown</span>
+      </div>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loadState() === 'loading') {
+    <div class="loading-message">
+      <span class="loading-message__icon" aria-hidden="true">⚡</span>
+      Fetching live ABB catalog&hellip;
+    </div>
+    <div class="skeleton-grid">
+      @for (i of [1,2,3,4,5,6]; track i) {
+        <div class="product-card product-card--skeleton">
+          <div class="skeleton skeleton--img"></div>
+          <div class="product-card__body">
+            <div class="skeleton skeleton--title"></div>
+            <div class="skeleton skeleton--desc"></div>
+            <div class="skeleton skeleton--desc skeleton--desc-short"></div>
+            <div class="skeleton skeleton--bar"></div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (loadState() === 'error') {
+    <div class="inline-error" role="alert">⚠️ {{ errorMsg() }}</div>
+  }
+
+  <!-- Catalog -->
+  @if (loadState() === 'loaded') {
+
+    <!-- Filter / Sort bar -->
+    <div class="filter-bar card">
+
+      <!-- Search -->
+      <div class="filter-bar__search">
+        <span class="filter-bar__search-icon" aria-hidden="true">🔍</span>
+        <input
+          type="search"
+          class="filter-bar__input"
+          placeholder="Search products…"
+          [value]="searchQuery()"
+          (input)="onSearch($event)"
+          aria-label="Search products"
+        />
+      </div>
+
+      <!-- Insulation chips -->
+      <div class="filter-group" role="group" aria-label="Filter by insulation">
+        <span class="filter-group__label">Insulation</span>
+        @for (opt of insulationOptions; track opt) {
+          <button
+            class="chip"
+            [class.chip--active]="insulationFilter() === opt"
+            (click)="setInsulation(opt)"
+          >{{ opt }}</button>
+        }
+      </div>
+
+      <!-- Market chips -->
+      <div class="filter-group" role="group" aria-label="Filter by market">
+        <span class="filter-group__label">Market</span>
+        @for (opt of marketOptions; track opt) {
+          <button
+            class="chip"
+            [class.chip--active]="marketFilter() === opt"
+            (click)="setMarket(opt)"
+          >{{ opt }}</button>
+        }
+      </div>
+
+      <!-- Compatible toggle -->
+      @if (hasParameters()) {
+        <button
+          class="chip chip--toggle"
+          [class.chip--active]="showOnlyCompatible()"
+          (click)="toggleCompatible()"
+          [attr.aria-pressed]="showOnlyCompatible()"
+        >
+          Compatible only
+        </button>
+      }
+
+      <!-- Sort -->
+      <div class="filter-group filter-group--right" role="group" aria-label="Sort">
+        <span class="filter-group__label">Sort</span>
+        <button class="chip" [class.chip--active]="sortKey() === 'score'" (click)="setSort('score')">
+          Match score
+        </button>
+        <button class="chip" [class.chip--active]="sortKey() === 'name'" (click)="setSort('name')">
+          Name
+        </button>
+      </div>
+
+      @if (searchQuery() || insulationFilter() !== 'All' || marketFilter() !== 'All' || showOnlyCompatible()) {
+        <button class="clear-btn" (click)="clearFilters()">Clear filters</button>
+      }
+    </div>
+
+    <!-- No results -->
+    @if (filtered().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon">🔍</span>
+        <p class="empty-state__title">No products match your filters</p>
+        <button class="chip chip--active" (click)="clearFilters()">Clear filters</button>
+      </div>
+    }
+
+    <!-- Product grid -->
+    @if (filtered().length > 0) {
+      <div class="product-grid">
+        @for (p of filtered(); track p.productKey) {
+          <article
+            class="product-card"
+            [class.product-card--recommended]="p.isRecommended"
+            [class.product-card--compatible]="p.isCompatible && !p.isRecommended"
+            [class.product-card--unscored]="p.matchScore === 0"
+            [class.product-card--selected]="isSelected(p)"
+          >
+            <!-- Image -->
+            <div class="product-card__img-wrap">
+              @if (p.imageUrl) {
+                <img
+                  [src]="p.imageUrl"
+                  [alt]="p.productName"
+                  class="product-card__img"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="product-card__placeholder" aria-hidden="true">
+                  <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="product-card__placeholder-svg">
+                    <rect width="80" height="80" rx="8" fill="#e8eaf6"/>
+                    <rect x="22" y="16" width="36" height="48" rx="4" fill="#9fa8da"/>
+                    <rect x="28" y="22" width="10" height="10" rx="2" fill="#fff" opacity=".85"/>
+                    <rect x="42" y="22" width="10" height="10" rx="2" fill="#fff" opacity=".85"/>
+                    <rect x="28" y="38" width="24" height="4" rx="2" fill="#fff" opacity=".7"/>
+                    <rect x="28" y="46" width="18" height="4" rx="2" fill="#fff" opacity=".5"/>
+                    <circle cx="40" cy="60" r="4" fill="#5c6bc0"/>
+                  </svg>
+                  <span class="product-card__placeholder-label">No image</span>
+                </div>
+              }
+
+              <!-- Status badge -->
+              <span class="product-card__status-badge {{ statusClass(p) }}">
+                {{ statusLabel(p) }}
+              </span>
+            </div>
+
+            <!-- Body -->
+            <div class="product-card__body">
+              <h3 class="product-card__name">{{ p.productName }}</h3>
+              <p class="product-card__desc">{{ p.description }}</p>
+
+              <!-- Score bar (only when there's scoring context) -->
+              @if (hasParameters()) {
+                <div class="score-row">
+                  <span class="score-row__label">Match</span>
+                  <div class="score-track">
+                    <div
+                      class="score-fill {{ scoreBarClass(p.matchScore) }}"
+                      [style.width]="scorePercent(p.matchScore)"
+                      role="progressbar"
+                      [attr.aria-valuenow]="(p.matchScore * 100).toFixed(0)"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                    ></div>
+                  </div>
+                  <span class="score-row__value">{{ scorePercent(p.matchScore) }}</span>
+                </div>
+              }
+
+              <!-- Matched criteria -->
+              @if (p.matchedCriteria.length > 0) {
+                <div class="criteria-section">
+                  <ul class="chip-list">
+                    @for (c of p.matchedCriteria; track c) {
+                      <li class="criterion criterion--match">✓ {{ c }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <!-- Mismatches -->
+              @if (p.mismatches.length > 0) {
+                <div class="criteria-section">
+                  <ul class="chip-list">
+                    @for (m of p.mismatches; track m) {
+                      <li class="criterion criterion--miss">✗ {{ m }}</li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              <!-- Footer -->
+              <div class="product-card__footer">
+                @if (p.documentationUrl) {
+                  <a
+                    [href]="p.documentationUrl"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="doc-link"
+                  >
+                    View documentation ↗
+                  </a>
+                } @else {
+                  <span></span>
+                }
+                <button
+                  class="select-btn"
+                  [class.select-btn--selected]="isSelected(p)"
+                  (click)="selectProduct(p)"
+                >
+                  @if (isSelected(p)) { ✓ Selected } @else { Select }
+                </button>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <!-- Continue -->
+    <div class="catalog-footer">
+      @if (selectedProduct()) {
+        <div class="selection-summary">
+          <span class="selection-summary__check">✓</span>
+          <span class="selection-summary__text">
+            <strong>{{ selectedProduct()!.productName }}</strong> selected for lineup
+          </span>
+          <button class="selection-summary__clear" (click)="selectProduct(selectedProduct()!)" title="Change selection">
+            Change
+          </button>
+        </div>
+      } @else {
+        <p class="selection-hint">No product selected — the top recommended will be auto-selected.</p>
+      }
+      <button class="btn btn--primary" (click)="navigateNext()">
+        Continue to Lineup →
+      </button>
+    </div>
+  }
+
+</div>

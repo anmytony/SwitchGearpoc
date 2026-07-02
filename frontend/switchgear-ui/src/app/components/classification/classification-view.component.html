@@ -1,0 +1,136 @@
+<div class="classification-page">
+
+  <div class="classification-page__header">
+    <h2 class="classification-page__title">Page Classification</h2>
+    <p class="classification-page__subtitle">
+      Each document page has been classified by content type and scored with a confidence index.
+    </p>
+  </div>
+
+  <!-- Summary chips -->
+  @if (loadState() === 'loaded') {
+    <div class="summary-bar" role="region" aria-label="Classification summary">
+      <span class="summary-bar__item">
+        <span class="chip chip--tabular">Text / Tabular</span>
+        <span class="summary-bar__count">{{ tabularCount() }}</span>
+      </span>
+      <span class="summary-bar__item">
+        <span class="chip chip--sld">Single-Line Diagram</span>
+        <span class="summary-bar__count">{{ sldCount() }}</span>
+      </span>
+      @if (lowConfidenceCount() > 0) {
+        <span class="summary-bar__item summary-bar__item--warn">
+          <span aria-hidden="true">⚠️</span>
+          {{ lowConfidenceCount() }} page(s) with low confidence
+        </span>
+      }
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loadState() === 'loading') {
+    <div class="card" aria-busy="true" aria-label="Loading page classifications">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="skeleton-row">
+          <span class="skeleton skeleton--index"></span>
+          <span class="skeleton skeleton--thumb"></span>
+          <span class="skeleton skeleton--chip"></span>
+          <span class="skeleton skeleton--badge"></span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (loadState() === 'error') {
+    <div class="inline-error" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span>{{ errorMessage() ?? 'Failed to load page classifications.' }}</span>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (loadState() === 'empty') {
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">📋</span>
+      <p class="empty-state__title">No pages classified yet</p>
+      <p class="empty-state__body">
+        Upload and process an RFQ document package to see page classification results.
+      </p>
+    </div>
+  }
+
+  <!-- Classification table -->
+  @if (loadState() === 'loaded' && pages().length) {
+    <div class="card table-card">
+      <table class="classification-table" aria-label="Page classifications">
+        <thead>
+          <tr>
+            <th scope="col" class="col-page">Page</th>
+            <th scope="col" class="col-thumb">Preview</th>
+            <th scope="col" class="col-type">Content Type</th>
+            <th scope="col" class="col-confidence">Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (page of pages(); track trackByPageNumber($index, page)) {
+            <tr
+              class="classification-table__row"
+              [class.classification-table__row--low]="page.confidenceIndex < 0.6"
+              [attr.aria-label]="'Page ' + page.pageNumber"
+            >
+              <!-- Page number -->
+              <td class="col-page">
+                <span class="page-num">{{ page.pageNumber }}</span>
+              </td>
+
+              <!-- Thumbnail placeholder -->
+              <td class="col-thumb">
+                @if (page.thumbnailUrl) {
+                  <img
+                    [src]="page.thumbnailUrl"
+                    [alt]="'Thumbnail for page ' + page.pageNumber"
+                    class="thumb-img"
+                    loading="lazy"
+                  />
+                } @else {
+                  <div class="thumb-placeholder" aria-hidden="true">
+                    {{ page.pageType === 'visual_sld' ? '⚡' : '📄' }}
+                  </div>
+                }
+              </td>
+
+              <!-- Page type chip -->
+              <td class="col-type">
+                <span
+                  class="chip"
+                  [ngClass]="pageTypeClass(page.pageType)"
+                  [attr.aria-label]="'Type: ' + pageTypeLabel(page.pageType)"
+                >
+                  {{ pageTypeLabel(page.pageType) }}
+                </span>
+              </td>
+
+              <!-- Confidence badge -->
+              <td class="col-confidence">
+                <span
+                  class="confidence-badge"
+                  [ngClass]="confidenceClass(page.confidenceIndex)"
+                  [attr.aria-label]="'Confidence: ' + confidenceLabel(page.confidenceIndex)"
+                >
+                  {{ confidenceLabel(page.confidenceIndex) }}
+                </span>
+                @if (page.confidenceIndex < 0.6) {
+                  <span class="review-marker" aria-label="Low confidence — review recommended">
+                    ⚠ Review
+                  </span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+</div>

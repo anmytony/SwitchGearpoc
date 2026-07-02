@@ -1,0 +1,228 @@
+<div class="param-review-page">
+
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Configuration Parameters</h2>
+      <p class="page-sub">
+        Review extracted values and set overrides before continuing.
+        <span class="product-badge">{{ productName() }}</span>
+      </p>
+    </div>
+    <div class="header-actions">
+      @if (paramDefsLoading()) {
+        <span class="defs-loading">Loading filter parameters…</span>
+      }
+      @if (paramDefsError()) {
+        <span class="defs-error" [title]="paramDefsError()!">
+          ⚠ ABB filter API unavailable — showing extracted values only
+        </span>
+      }
+      @if (saveError()) {
+        <span class="save-error">⚠ {{ saveError() }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (loadState() === 'loading') {
+    <div class="skeleton-block">
+      @for (i of [1,2,3,4,5,6,7,8,9]; track i) {
+        <div class="skeleton-row">
+          <span class="sk sk--name"></span>
+          <span class="sk sk--value"></span>
+          <span class="sk sk--badge"></span>
+          <span class="sk sk--input"></span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error -->
+  @if (loadState() === 'error') {
+    <p class="error-msg">{{ errorMessage() ?? 'Failed to load parameters.' }}</p>
+  }
+
+  @if (loadState() === 'loaded') {
+
+    <!-- ── Instance tabs (shown only when document has 2+ switchgear systems) ── -->
+    @if (isMultiInstance()) {
+      <div class="instance-tabs-wrapper">
+        <div class="instance-tabs-label">Installations:</div>
+        <div class="instance-tabs" role="tablist">
+          @for (inst of instances(); track trackByIndex($index)) {
+            <button
+              class="instance-tab"
+              role="tab"
+              [class.instance-tab--active]="selectedInstIdx() === $index"
+              (click)="selectInstance($index)"
+              [attr.aria-selected]="selectedInstIdx() === $index"
+            >
+              <span class="tab-index">{{ inst.instanceIndex }}</span>
+              <span class="tab-name">{{ inst.instanceName }}</span>
+              @if (inst.location) {
+                <span class="tab-loc">{{ inst.location }}</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── Parameter table ── -->
+    <table class="param-table">
+      <thead>
+        <tr>
+          <th class="col-name">Parameter</th>
+          <th class="col-value">Extracted Value</th>
+          <th class="col-conf">Confidence</th>
+          <th class="col-path">Source</th>
+          <th class="col-page">Page</th>
+          <th class="col-override">Override</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (param of parameters(); track trackByName($index, param)) {
+          <tr class="param-row"
+            [class.row--flagged]="param.flaggedForReview && !param.isNotExtracted"
+            [class.row--missing]="param.isNotExtracted"
+            [class.row--overridden]="hasOverride(param.name)"
+          >
+            <!-- Name -->
+            <td class="col-name">
+              <span class="p-name">{{ param.displayLabel }}</span>
+              @if (param.flaggedForReview && !param.isNotExtracted) {
+                <span class="dot dot--warn" title="Low confidence">●</span>
+              }
+              @if (param.isAbbDefault) {
+                <span class="dot dot--default" title="ABB default">●</span>
+              }
+            </td>
+
+            <!-- Extracted value -->
+            <td class="col-value">
+              @if (param.isNotExtracted) {
+                <span class="val val--missing">—</span>
+              } @else {
+                <span class="val" [class.val--struck]="hasOverride(param.name)">
+                  {{ param.value }}{{ param.unit ? ' ' + param.unit : '' }}
+                </span>
+                @if (hasNormalizedHint(param)) {
+                  <span class="val-normalized" [title]="'Mapped to: ' + param.normalizedValue">
+                    → {{ param.normalizedValue }}
+                  </span>
+                }
+              }
+            </td>
+
+            <!-- Confidence -->
+            <td class="col-conf">
+              @if (param.isNotExtracted) {
+                <span class="badge badge--none">—</span>
+              } @else if (param.isAbbDefault) {
+                <span class="badge badge--default">Default</span>
+              } @else {
+                <span class="badge" [ngClass]="confidenceClass(param.confidenceIndex)">
+                  {{ confidenceLabel(param.confidenceIndex) }}
+                </span>
+              }
+            </td>
+
+            <!-- Extraction path + evidence -->
+            <td class="col-path">
+              @if (param.extractionPath) {
+                <span
+                  class="badge-path"
+                  [ngClass]="extractionPathClass(param.extractionPath)"
+                  [title]="param.deviationReason || param.extractionReason || ''">
+                  {{ extractionPathLabel(param.extractionPath) }}
+                </span>
+                @if (param.deviationReason) {
+                  <span class="conflict-icon" [title]="param.deviationReason">⚡</span>
+                }
+                @if (param.sourceText) {
+                  <button class="btn-evidence" type="button" (click)="showEvidence(param)" title="Show source text">🔍</button>
+                }
+              } @else {
+                <span class="text-dim">—</span>
+              }
+            </td>
+
+            <!-- Source page -->
+            <td class="col-page">
+              @if (param.sourcePage > 0) {
+                <span class="page-badge">p.{{ param.sourcePage }}</span>
+              } @else {
+                <span class="text-dim">—</span>
+              }
+            </td>
+
+            <!-- Override -->
+            <td class="col-override">
+              <div class="ov-cell">
+                @if (param.allowedValues.length > 0) {
+                  <select class="ov-select"
+                    [class.ov-select--active]="hasOverride(param.name)"
+                    [class.ov-select--required]="param.isNotExtracted && !hasOverride(param.name)"
+                    (change)="onOverrideSelect(param, $event)"
+                  >
+                    <option value="">{{ param.isNotExtracted ? '— select —' : '— keep —' }}</option>
+                    @for (v of param.allowedValues; track v) {
+                      <option [value]="v" [selected]="getOverrideValue(param.name) === v">
+                        {{ v }}{{ param.unit ? ' ' + param.unit : '' }}
+                      </option>
+                    }
+                  </select>
+                } @else {
+                  <input class="ov-input"
+                    type="text"
+                    [class.ov-input--active]="hasOverride(param.name)"
+                    [placeholder]="param.isNotExtracted ? 'Enter value' : 'Override…'"
+                    [value]="getOverrideValue(param.name)"
+                    (input)="onOverrideChange(param, $any($event.target).value)"
+                  />
+                }
+                @if (hasOverride(param.name)) {
+                  <button class="clr-btn" type="button" (click)="onOverrideChange(param, '')">✕</button>
+                }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Evidence panel -->
+    @if (selectedEvidence()) {
+      <div class="evidence-panel" role="region" aria-label="Source evidence">
+        <div class="evidence-header">
+          <span class="evidence-title">
+            Source evidence — <strong>{{ selectedEvidence()!.name }}</strong>
+            <span class="evidence-page">Page {{ selectedEvidence()!.page }}</span>
+          </span>
+          <button class="evidence-close" type="button" (click)="clearEvidence()" aria-label="Close evidence">✕</button>
+        </div>
+        <blockquote class="evidence-text">{{ selectedEvidence()!.text }}</blockquote>
+      </div>
+    }
+
+    <!-- Footer -->
+    <div class="footer">
+      <span class="footer-info">
+        @if (isMultiInstance()) {
+          {{ instances().length }} installations detected —
+        }
+        @if (overrideCount() > 0) { {{ overrideCount() }} override(s) pending }
+        @else if (savedOnce()) { ✓ Saved }
+      </span>
+      <div class="footer-btns">
+        <button class="btn-csv" type="button" (click)="downloadCsv()" title="Download parameters as CSV">
+          ↓ Export CSV
+        </button>
+        <button class="btn-save" type="button" [disabled]="isSaving()" (click)="saveAndContinue()">
+          @if (isSaving()) { Saving… } @else { Save &amp; Continue → }
+        </button>
+      </div>
+    </div>
+  }
+
+</div>

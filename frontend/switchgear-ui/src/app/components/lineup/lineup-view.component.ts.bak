@@ -1,0 +1,347 @@
+import {
+  Component,
+  ChangeDetectionStrategy,
+  OnInit,
+  signal,
+  computed,
+  inject,
+  DestroyRef
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ReviewStateService } from '../../services/review-state.service';
+import { PipelineApiService } from '../../services/pipeline-api.service';
+import { SwitchgearCubicle, SwitchgearInstance, CubicleDevice, CubicleType, ProductMatch, TopologySummary } from '../../models/models';
+
+type LoadState = 'loading' | 'loaded' | 'error' | 'empty';
+
+interface TopologyWarning {
+  severity: 'high' | 'medium';
+  message: string;
+}
+
+@Component({
+  selector: 'app-lineup-view',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule],
+  templateUrl: './lineup-view.component.html',
+  styleUrls: ['./lineup-view.component.scss']
+})
+export class LineupViewComponent implements OnInit {
+  private readonly reviewState = inject(ReviewStateService);
+  private readonly api = inject(PipelineApiService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly loadState = signal<LoadState>('loading');
+  readonly errorMessage = signal<string | null>(null);
+  readonly cubicles = signal<SwitchgearCubicle[]>([]);
+  readonly instances = signal<SwitchgearInstance[]>([]);
+  readonly selectedInstanceId = signal<number | null>(null);
+  readonly cubicleDevices = signal<CubicleDevice[]>([]);
+  readonly cubicleDevicesLoadState = signal<'loading' | 'loaded' | 'empty'>('loading');
+  readonly selectedDiagramPos = signal<number | null>(null);
+
+  readonly isMultiInstance = computed(() => this.instances().length > 1);
+
+  readonly instanceCubicles = computed(() => {
+    const instId = this.selectedInstanceId();
+    const all = this.cubicles();
+    if (instId === null) return all;
+    const filtered = all.filter(c => c.switchgearInstanceId === instId);
+    // Fall back to all cubicles with no instance assignment (legacy data)
+    return filtered.length > 0 ? filtered : all.filter(c => c.switchgearInstanceId === null);
+  });
+
+  readonly selectedDiagramCubicle = computed(() => {
+    const pos = this.selectedDiagramPos();
+    return pos !== null ? (this.instanceCubicles().find(c => c.position === pos) ?? null) : null;
+  });
+
+  readonly selectedCubicleDevices = computed(() => {
+    const pos = this.selectedDiagramPos();
+    const instId = this.selectedInstanceId();
+    const devs = this.cubicleDevices();
+    // Filter to current instance first
+    const instanceDevs = instId !== null
+      ? devs.filter(d => d.switchgearInstanceId === instId || d.switchgearInstanceId === null)
+      : devs;
+    if (pos === null) return instanceDevs;
+    // Match by position number as string, or padded (e.g. "1", "01", "001")
+    const posStr = String(pos);
+    const filtered = instanceDevs.filter(d =>
+      d.functionalPosition === posStr ||
+      d.functionalPosition === posStr.padStart(2, '0') ||
+      d.functionalPosition === posStr.padStart(3, '0')
+    );
+    return filtered.length > 0 ? filtered : instanceDevs.filter(d => d.functionalPosition === posStr);
+  });
+  readonly productMatches = signal<ProductMatch[]>([]);
+  readonly expandedPosition = signal<number | null>(null);
+  readonly matchLoadState = signal<'loading' | 'loaded' | 'empty'>('loading');
+  readonly selectedProductKey = signal<string | null>(null);
+  readonly topology = signal<TopologySummary | null>(null);
+
+  readonly recommendedMatches = computed(() =>
+    this.productMatches().filter(p => p.isRecommended)
+  );
+
+  readonly compatibleMatches = computed(() =>
+    this.productMatches().filter(p => p.isCompatible && !p.isRecommended)
+  );
+
+  readonly topologyWarnings = computed<TopologyWarning[]>(() => {
+    const warnings: TopologyWarning[] = [];
+    const topo = this.topology();
+
+    if (topo) {
+      // Use Path C topology summary when available
+      if (topo.incomers === 0)
+        warnings.push({ severity: 'high', message: 'No incomer panel detected in the lineup.' });
+      if (topo.feeders === 0)
+        warnings.push({ severity: 'medium', message: 'No feeder panels detected — lineup may be incomplete.' });
+      if (topo.couplers > 1)
+        warnings.push({ severity: 'medium', message: `${topo.couplers} couplers detected — verify busbar section split.` });
+    } else {
+      // Fallback: derive from cubicle types for the active instance
+      const types = this.instanceCubicles().map(c => c.type);
+      if (!types.includes('incomer'))
+        warnings.push({ severity: 'high', message: 'No incomer cubicle detected in the lineup.' });
+      if (!types.includes('outgoer'))
+        warnings.push({ severity: 'high', message: 'No outgoer cubicle detected in the lineup.' });
+      const couplerCount = types.filter(t => t === 'coupler').length;
+      if (couplerCount > 1)
+        warnings.push({ severity: 'medium', message: `${couplerCount} coupler cubicles detected — verify bus-tie topology.` });
+    }
+
+    // Always include per-cubicle warnings
+    this.cubicles().forEach(c => {
+      if (c.topologyWarning)
+        warnings.push({ severity: 'medium', message: c.topologyWarning });
+    });
+
+    return warnings;
+  });
+
+  readonly highWarningCount = computed(() =>
+    this.topologyWarnings().filter(w => w.severity === 'high').length
+  );
+
+  ngOnInit(): void {
+    const docId = this.reviewState.documentId();
+    if (!docId) {
+      this.loadState.set('error');
+      this.errorMessage.set('No document selected. Upload a package first.');
+      return;
+    }
+    // Restore selection carried over from the product catalog page
+    const prior = this.reviewState.selectedProduct();
+    if (prior) this.selectedProductKey.set(prior.productKey);
+    this.loadFromApi(docId);
+  }
+
+  private loadFromApi(docId: string): void {
+    // Each block checks the cache first — if warm, apply immediately without an API call.
+    // Caches are populated on first load and invalidated when a new document is selected.
+
+    const cachedCubicles = this.reviewState.cachedCubicles();
+    if (cachedCubicles) {
+      this.applyCubicles(cachedCubicles);
+    } else {
+      this.loadState.set('loading');
+      this.api.getLineup(docId).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: cubs => {
+          this.reviewState.setCachedCubicles(cubs);
+          this.applyCubicles(cubs);
+        },
+        error: (err: Error) => {
+          this.loadState.set('error');
+          this.errorMessage.set(err.message ?? 'Failed to load lineup.');
+        }
+      });
+    }
+
+    const cachedInstances = this.reviewState.cachedInstances();
+    if (cachedInstances) {
+      this.applyInstances(cachedInstances);
+    } else {
+      this.api.getInstances(docId).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: insts => {
+          this.reviewState.setCachedInstances(insts);
+          this.applyInstances(insts);
+        },
+        error: () => { /* instances optional — silently ignore */ }
+      });
+    }
+
+    const cachedDevices = this.reviewState.cachedCubicleDevices();
+    if (cachedDevices) {
+      this.cubicleDevices.set(cachedDevices);
+      this.cubicleDevicesLoadState.set(cachedDevices.length ? 'loaded' : 'empty');
+    } else {
+      this.api.getCubicleDevices(docId).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: devs => {
+          this.reviewState.setCachedCubicleDevices(devs);
+          this.cubicleDevices.set(devs);
+          this.cubicleDevicesLoadState.set(devs.length ? 'loaded' : 'empty');
+        },
+        error: () => this.cubicleDevicesLoadState.set('empty')
+      });
+    }
+
+    const cachedMatches = this.reviewState.cachedProductMatches();
+    if (cachedMatches) {
+      this.applyProductMatches(cachedMatches);
+    } else {
+      this.api.getProductMatch(docId).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: matches => {
+          this.reviewState.setCachedProductMatches(matches);
+          this.applyProductMatches(matches);
+        },
+        error: () => this.matchLoadState.set('empty')
+      });
+    }
+  }
+
+  private applyCubicles(cubs: SwitchgearCubicle[]): void {
+    this.cubicles.set(cubs);
+    this.loadState.set(cubs.length ? 'loaded' : 'empty');
+    this.autoSelectFirstCubicle();
+  }
+
+  private applyInstances(insts: SwitchgearInstance[]): void {
+    this.instances.set(insts);
+    const withTopo = insts.find(i => i.topologySummary != null);
+    if (withTopo?.topologySummary) {
+      this.topology.set(withTopo.topologySummary);
+    }
+    if (insts.length > 0 && this.selectedInstanceId() === null) {
+      this.selectedInstanceId.set(insts[0].id);
+      this.autoSelectFirstCubicle();
+    }
+  }
+
+  private applyProductMatches(matches: ProductMatch[]): void {
+    this.productMatches.set(matches);
+    this.matchLoadState.set(matches.length ? 'loaded' : 'empty');
+
+    const selectedProduct = this.reviewState.selectedProduct();
+    const selectedKey = selectedProduct?.productKey;
+    const matchFound = selectedKey && matches.some(m => m.productKey === selectedKey);
+
+    if (selectedKey && !matchFound) {
+      this.selectedProductKey.set(null);
+      this.reviewState.setSelectedProduct(null);
+    }
+
+    if (!this.selectedProductKey() && matches.length) {
+      this.selectedProductKey.set(matches[0].productKey);
+      this.reviewState.setSelectedProduct(matches[0]);
+    }
+  }
+
+  toggleCubicle(position: number): void {
+    this.expandedPosition.update(cur => cur === position ? null : position);
+  }
+
+  isExpanded(position: number): boolean {
+    return this.expandedPosition() === position;
+  }
+
+  badgeClass(type: CubicleType): string {
+    return `cubicle-badge cubicle-badge--${type.replace('_', '-')}`;
+  }
+
+  typeLabel(type: CubicleType): string {
+    const labels: Record<CubicleType, string> = {
+      incomer: 'Incomer',
+      outgoer: 'Outgoer',
+      coupler: 'Coupler',
+      metering: 'Metering',
+      busbar_section: 'Busbar Section'
+    };
+    return labels[type] ?? type;
+  }
+
+  confidenceClass(score: number): string {
+    if (score >= 0.75) return 'conf conf--high';
+    if (score >= 0.5)  return 'conf conf--mid';
+    return 'conf conf--low';
+  }
+
+  deviceConfClass(score: number): string {
+    if (score >= 0.75) return 'conf conf--high';
+    if (score >= 0.5)  return 'conf conf--mid';
+    return 'conf conf--low';
+  }
+
+  selectInstance(instId: number): void {
+    this.selectedInstanceId.set(instId);
+    this.selectedDiagramPos.set(null);
+    this.autoSelectFirstCubicle();
+  }
+
+  private autoSelectFirstCubicle(): void {
+    if (this.selectedDiagramPos() !== null) return;
+    const cubs = this.instanceCubicles();
+    if (cubs.length > 0) {
+      this.selectedDiagramPos.set(cubs[0].position);
+    }
+  }
+
+  selectDiagramCubicle(pos: number): void {
+    this.selectedDiagramPos.set(pos);
+  }
+
+  navigateNext(): void {
+    this.router.navigate(['/review/products']);
+  }
+
+  selectProduct(key: string): void {
+    this.selectedProductKey.set(key);
+    const match = this.productMatches().find(p => p.productKey === key) ?? null;
+    this.reviewState.setSelectedProduct(match);
+  }
+
+  selectedProductDetails = computed(() => {
+    const key = this.selectedProductKey();
+    return key ? (this.productMatches().find(p => p.productKey === key) ?? null) : null;
+  });
+
+  isSelectedProduct(key: string): boolean {
+    return this.selectedProductKey() === key;
+  }
+
+  scorePercent(score: number): string {
+    return (score * 100).toFixed(0) + '%';
+  }
+
+  scoreClass(score: number): string {
+    if (score >= 0.85) return 'score-bar--high';
+    if (score >= 0.65) return 'score-bar--mid';
+    return 'score-bar--low';
+  }
+
+  cubicleCountForInstance(instId: number): number {
+    const filtered = this.cubicles().filter(c => c.switchgearInstanceId === instId);
+    return filtered.length > 0 ? filtered.length : this.cubicles().filter(c => c.switchgearInstanceId === null).length;
+  }
+
+  trackByPosition(_i: number, c: SwitchgearCubicle): number {
+    return c.position;
+  }
+
+  trackByKey(_i: number, p: ProductMatch): string {
+    return p.productKey;
+  }
+}

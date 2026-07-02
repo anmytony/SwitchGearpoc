@@ -1,0 +1,120 @@
+<div class="xml-page">
+
+  <div class="xml-page__header">
+    <h2 class="xml-page__title">XML Configuration Output</h2>
+    <p class="xml-page__subtitle">
+      Generated ABB product configurator XML. Validate and export when all issues are resolved.
+    </p>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (loadState() === 'loading') {
+    <div class="card" aria-busy="true" aria-label="Loading XML">
+      <div class="skeleton skeleton--toolbar"></div>
+      <div class="skeleton skeleton--xml-block"></div>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (loadState() === 'error') {
+    <div class="inline-error" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span>{{ errorMessage() ?? 'Failed to load XML output.' }}</span>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (loadState() === 'empty') {
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">📄</span>
+      <p class="empty-state__title">XML not yet generated</p>
+      <p class="empty-state__body">
+        Complete the parameter review and lineup validation to generate the XML configuration.
+      </p>
+    </div>
+  }
+
+  <!-- Loaded content -->
+  @if (loadState() === 'loaded') {
+
+    <!-- Status / action toolbar -->
+    <div class="xml-toolbar card">
+
+      <!-- Schema validation badge -->
+      <span
+        class="schema-badge"
+        [ngClass]="schemaStatusClass()"
+        role="status"
+        [attr.aria-label]="schemaStatusLabel()"
+      >
+        @switch (schemaStatus()) {
+          @case ('valid')   { ✓ {{ schemaStatusLabel() }} }
+          @case ('invalid') { ✗ {{ schemaStatusLabel() }} }
+          @default          { ⏳ {{ schemaStatusLabel() }} }
+        }
+      </span>
+
+      <!-- Confidence readiness bar -->
+      @if (confidencePct() !== null) {
+        <div class="confidence-bar" role="meter" [attr.aria-valuenow]="confidencePct()" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="'Overall confidence: ' + confidencePct() + '%'">
+          <div
+            class="confidence-bar__fill"
+            [ngClass]="confidenceBarClass()"
+            [style.width.%]="confidencePct()"
+          ></div>
+          <span class="confidence-bar__label">{{ confidencePct() }}% confidence</span>
+        </div>
+      }
+
+      <!-- Spacer -->
+      <span class="xml-toolbar__spacer"></span>
+
+      <!-- Copy button -->
+      <button
+        type="button"
+        class="btn btn--outline btn--sm"
+        [class.btn--copied]="clipboardState() === 'copied'"
+        [class.btn--failed]="clipboardState() === 'failed'"
+        (click)="copyToClipboard()"
+        aria-label="Copy XML to clipboard"
+      >
+        {{ clipboardLabel() }}
+      </button>
+
+      <!-- Download / Export button -->
+      <div class="export-wrapper">
+        <button
+          type="button"
+          class="btn btn--primary btn--sm"
+          [disabled]="!canExport()"
+          [attr.aria-disabled]="!canExport()"
+          [attr.title]="exportBlockReason() ?? 'Download XML configuration file'"
+          (click)="downloadXml()"
+        >
+          ⬇ Export XML
+        </button>
+        @if (exportBlockReason()) {
+          <span class="export-blocked-hint" role="alert">{{ exportBlockReason() }}</span>
+        }
+      </div>
+    </div>
+
+    <!-- Unresolved high-severity deviation warning -->
+    @if (unresolvedHighCount() > 0) {
+      <div class="inline-error" role="alert">
+        <span aria-hidden="true">🚩</span>
+        <span>
+          {{ unresolvedHighCount() }} high-severity deviation(s) remain unresolved.
+          Resolve them in the <strong>Deviations</strong> screen before exporting.
+        </span>
+      </div>
+    }
+
+    <!-- XML preview block -->
+    <div class="card xml-card">
+      <pre class="xml-pre" aria-label="Generated XML content" aria-readonly="true">{{ xmlContent() }}</pre>
+    </div>
+
+  }
+
+</div>

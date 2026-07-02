@@ -1,0 +1,59 @@
+{
+  "sample": "RFQ_ITALIANO_TABELLE.txt",
+  "rows_extracted": 0,
+  "instance_distribution": {},
+  "first_10_rows": [],
+  "qa": {
+    "is_complete": false,
+    "missing_functional_positions": [
+      "Tensione nominale",
+      "Frequenza",
+      "Corrente di cortocircuito",
+      "Corrente nominale di sbarra",
+      "Corrente nominale pannello",
+      "Tensione di isolamento nominale",
+      "Categoria di sovratensione",
+      "Configurazione sbarra",
+      "Tipo isolamento interno",
+      "Distribuzione",
+      "Numero scomparti",
+      "Sistema protezione",
+      "Tensione di funzionamento",
+      "Isolamento principale",
+      "Categoria tensione",
+      "Mercato",
+      "Sbarra configurazione",
+      "Corrente massima",
+      "Protezione",
+      "Tensione nominale di esercizio",
+      "Frequenza nominale di sistema",
+      "Corrente sbarra principale",
+      "Corrente circuito di uscita",
+      "Tensione transitoria",
+      "Rigidit\u00e0 dielettrica",
+      "Isolamento interno",
+      "Mercato di Riferimento",
+      "Standard Principale",
+      "Documento Tecnico"
+    ],
+    "suspected_merged_rows": [],
+    "schema_violations": [],
+    "notes": [
+      "No rows were extracted from the source text."
+    ]
+  },
+  "panel_prompt_output": {
+    "panel_type": "Feeder",
+    "functional_position": "",
+    "cb_model": "",
+    "cb_rating": "630 A",
+    "cb_breaking_capacity": "25 kA",
+    "ct_ratio": "",
+    "ct_accuracy_class": "",
+    "vt_ratio": "",
+    "vt_accuracy_class": "",
+    "relay_model": "",
+    "protection_functions": "Differenziale",
+    "confidence": 0.9
+  }
+}

@@ -1,0 +1,183 @@
+<div class="deviation-page">
+
+  <div class="deviation-page__header">
+    <h2 class="deviation-page__title">Deviations &amp; Review Items</h2>
+    <p class="deviation-page__subtitle">
+      Resolve flagged issues before exporting the XML configuration.
+    </p>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (loadState() === 'loading') {
+    <div class="card" aria-busy="true" aria-label="Loading deviations">
+      @for (i of [1,2,3,4]; track i) {
+        <div class="skeleton-row">
+          <span class="skeleton skeleton--sev"></span>
+          <span class="skeleton skeleton--field"></span>
+          <span class="skeleton skeleton--reason"></span>
+          <span class="skeleton skeleton--btn"></span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (loadState() === 'error') {
+    <div class="inline-error" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span>{{ errorMessage() ?? 'Failed to load deviations.' }}</span>
+    </div>
+  }
+
+  <!-- Empty state -->
+  @if (loadState() === 'empty') {
+    <div class="empty-state">
+      <span class="empty-state__icon" aria-hidden="true">✅</span>
+      <p class="empty-state__title">No deviations detected</p>
+      <p class="empty-state__body">
+        All extractions met the confidence threshold with no contradictions.
+      </p>
+    </div>
+  }
+
+  <!-- Loaded content -->
+  @if (loadState() === 'loaded') {
+
+    <!-- Summary bar -->
+    <div class="summary-bar card" role="region" aria-label="Deviation summary">
+      <span class="summary-stat">
+        <span class="summary-stat__value">{{ totalCount() }}</span>
+        <span class="summary-stat__label">Total</span>
+      </span>
+      <span class="summary-divider"></span>
+      <span class="summary-stat summary-stat--warn">
+        <span class="summary-stat__value">{{ unresolvedTotal() }}</span>
+        <span class="summary-stat__label">Unresolved</span>
+      </span>
+      @if (unresolvedHigh() > 0) {
+        <span class="summary-stat summary-stat--error">
+          <span class="summary-stat__value">{{ unresolvedHigh() }}</span>
+          <span class="summary-stat__label">High (blocking export)</span>
+        </span>
+      }
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar" role="group" aria-label="Filter deviations">
+      <span class="filter-bar__label">Severity:</span>
+      @for (sev of ['all', 'high', 'medium', 'low']; track sev) {
+        <button
+          type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="severityFilter() === sev"
+          (click)="onSeverityClick(sev)"
+          [attr.aria-pressed]="severityFilter() === sev"
+        >
+          {{ sev === 'all' ? 'All' : (sev | titlecase) }}
+        </button>
+      }
+      <span class="filter-bar__divider"></span>
+      <span class="filter-bar__label">Status:</span>
+      @for (res of ['open', 'resolved', 'all']; track res) {
+        <button
+          type="button"
+          class="filter-btn"
+          [class.filter-btn--active]="resolutionFilter() === res"
+          (click)="onResolutionClick(res)"
+          [attr.aria-pressed]="resolutionFilter() === res"
+        >
+          {{ res === 'all' ? 'All' : (res | titlecase) }}
+        </button>
+      }
+    </div>
+
+    <!-- Empty filter result -->
+    @if (filtered().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon" aria-hidden="true">🔍</span>
+        <p class="empty-state__title">No deviations match the current filters</p>
+      </div>
+    }
+
+    <!-- Deviation list -->
+    @if (filtered().length > 0) {
+      <ul class="deviation-list card" aria-label="Deviation items">
+        @for (dev of filtered(); track trackById($index, dev)) {
+          <li
+            class="deviation-item"
+            [class.deviation-item--resolved]="isResolved(dev.id)"
+            [attr.aria-label]="dev.field + ' deviation, severity ' + dev.severity"
+          >
+            <!-- Severity icon -->
+            <span
+              class="sev-icon"
+              [ngClass]="severityClass(dev.severity)"
+              aria-hidden="true"
+            >
+              @switch (dev.severity) {
+                @case ('high')   { 🔴 }
+                @case ('medium') { 🟡 }
+                @default         { ⚪ }
+              }
+            </span>
+
+            <!-- Content -->
+            <div class="deviation-item__body">
+              <div class="deviation-item__top">
+                <span class="deviation-item__field">{{ dev.field }}</span>
+                <span
+                  class="sev-chip"
+                  [ngClass]="severityClass(dev.severity)"
+                >
+                  {{ dev.severity | titlecase }}
+                </span>
+                @if (isResolved(dev.id)) {
+                  <span class="resolved-chip">✓ Resolved</span>
+                }
+              </div>
+
+              <p class="deviation-item__reason">{{ dev.reason }}</p>
+
+              @if (isConflictReason(dev.reason)) {
+                <div class="conflict-row">
+                  <span class="conflict-label">Ensemble conflict</span>
+                  @for (part of parseConflict(dev.reason); track part.path) {
+                    <span class="conflict-chip conflict-chip--{{ part.path.toLowerCase() }}">
+                      <strong>{{ part.path }}</strong>: {{ part.value }}
+                    </span>
+                  }
+                </div>
+              }
+
+              @if (dev.sourcePages.length > 0) {
+                <span class="deviation-item__pages">
+                  Source: page(s) {{ dev.sourcePages.join(', ') }}
+                </span>
+              }
+
+              @if (dev.recommendedAction) {
+                <p class="deviation-item__action">
+                  <strong>Recommended:</strong> {{ dev.recommendedAction }}
+                </p>
+              }
+            </div>
+
+            <!-- Resolve button -->
+            @if (!isResolved(dev.id)) {
+              <button
+                type="button"
+                class="btn btn--sm btn--outline resolve-btn"
+                (click)="resolve(dev.id)"
+                [attr.aria-label]="'Mark ' + dev.field + ' as resolved'"
+              >
+                Mark Resolved
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+  }
+
+</div>

@@ -1,0 +1,6 @@
+@SwitchgearApi_HostAddress = http://localhost:5195
+
+GET {{SwitchgearApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

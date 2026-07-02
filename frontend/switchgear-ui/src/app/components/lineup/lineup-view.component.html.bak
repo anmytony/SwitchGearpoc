@@ -1,0 +1,251 @@
+<div class="lineup-page">
+
+  <!-- ── SWITCHGEAR INSTANCE TABS (multi-switchgear documents only) ── -->
+  @if (isMultiInstance()) {
+    <div class="instance-tabs-bar" role="tablist" aria-label="Switchgear installations">
+      @for (inst of instances(); track inst.id) {
+        <button
+          class="inst-tab"
+          role="tab"
+          [class.inst-tab--active]="selectedInstanceId() === inst.id"
+          [attr.aria-selected]="selectedInstanceId() === inst.id"
+          (click)="selectInstance(inst.id)"
+        >
+          <span class="inst-tab__index">{{ inst.instanceIndex }}</span>
+          <span class="inst-tab__name">{{ inst.instanceName }}</span>
+          @if (inst.location) {
+            <span class="inst-tab__loc">{{ inst.location }}</span>
+          }
+          <span class="inst-tab__count">{{ cubicleCountForInstance(inst.id) }} panels</span>
+        </button>
+      }
+    </div>
+  }
+
+  <!-- ── CUBICLE DIAGRAM ──────────────────────────────────────── -->
+  <section class="diagram-section card" aria-label="Cubicle lineup diagram">
+    <div class="diagram-section__header">
+      <h3 class="diagram-section__title">Panel Lineup Diagram</h3>
+      <p class="diagram-section__sub">Reconstructed cubicle sequence — click a panel to inspect details.</p>
+    </div>
+
+    @if (loadState() === 'loading') {
+      <div class="diagram-skeleton">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <div class="dskel-panel">
+            <div class="skeleton skeleton--badge"></div>
+            <div class="skeleton skeleton--label"></div>
+          </div>
+        }
+      </div>
+    } @else if (loadState() === 'error' || loadState() === 'empty') {
+      <div class="diagram-empty">
+        <span aria-hidden="true">🔌</span>
+        <p>No cubicle layout data available for this document.</p>
+      </div>
+    } @else {
+
+      <div class="diagram-outer">
+
+        <!-- Busbar rail -->
+        <div class="diagram-bus-row">
+          <span class="diagram-bus-lbl">MV Busbar</span>
+          <div class="diagram-bus-rail"></div>
+        </div>
+
+        <!-- Panel row -->
+        <div class="diagram-panels-row" role="list">
+          @for (cub of instanceCubicles(); track cub.position) {
+            <button
+              class="cub-item"
+              [class]="'cub-item cub-item--' + cub.type + (selectedDiagramPos() === cub.position ? ' cub-item--active' : '') + (cub.topologyWarning ? ' cub-item--warn' : '')"
+              role="listitem"
+              (click)="selectDiagramCubicle(cub.position)"
+              [attr.aria-pressed]="selectedDiagramPos() === cub.position"
+              [attr.aria-label]="typeLabel(cub.type) + ' panel ' + cub.position"
+            >
+              <!-- Busbar drop line -->
+              <div class="cub-item__stem"></div>
+
+              <!-- Panel body -->
+              <div class="cub-item__box">
+
+                <!-- Circuit-breaker SLD symbol -->
+                <svg class="cub-item__cb" viewBox="0 0 20 44" aria-hidden="true">
+                  <line x1="10" y1="0"  x2="10" y2="9"  stroke="currentColor" stroke-width="2"/>
+                  <rect x="3" y="9" width="14" height="14" rx="1"
+                        fill="none" stroke="currentColor" stroke-width="1.5"/>
+                  <line x1="6"  y1="12" x2="14" y2="20" stroke="currentColor" stroke-width="1.3"/>
+                  <line x1="14" y1="12" x2="6"  y2="20" stroke="currentColor" stroke-width="1.3"/>
+                  <line x1="10" y1="23" x2="10" y2="44" stroke="currentColor" stroke-width="2"/>
+                  @if (cub.type === 'incomer') {
+                    <polygon points="6,40 14,40 10,44" fill="currentColor"/>
+                  }
+                  @if (cub.type === 'outgoer') {
+                    <polygon points="6,40 14,40 10,44" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                  }
+                  @if (cub.type === 'coupler') {
+                    <line x1="6" y1="36" x2="14" y2="36" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="10" y1="33" x2="10" y2="39" stroke="currentColor" stroke-width="1.5"/>
+                  }
+                  @if (cub.type === 'metering') {
+                    <circle cx="10" cy="37" r="4" fill="none" stroke="currentColor" stroke-width="1.2"/>
+                    <line x1="8" y1="37" x2="12" y2="35" stroke="currentColor" stroke-width="1"/>
+                  }
+                </svg>
+
+                <!-- Position number -->
+                <span class="cub-item__pos">{{ cub.position }}</span>
+
+                <!-- Type label -->
+                <span class="cub-item__lbl">{{ typeLabel(cub.type) }}</span>
+
+                <!-- Confidence -->
+                <span class="cub-item__conf" [class]="confidenceClass(cub.confidenceIndex)">
+                  {{ (cub.confidenceIndex * 100).toFixed(0) }}%
+                </span>
+
+                @if (cub.topologyWarning) {
+                  <span class="cub-item__warn-dot" title="{{ cub.topologyWarning }}" aria-label="Warning">⚠</span>
+                }
+
+              </div>
+            </button>
+          }
+        </div>
+
+        <!-- Selected cubicle detail strip -->
+        @if (selectedDiagramCubicle()) {
+          <div class="cub-detail">
+            <span class="cub-detail__pos">Panel #{{ selectedDiagramCubicle()!.position }}</span>
+            <span [class]="badgeClass(selectedDiagramCubicle()!.type)">
+              {{ typeLabel(selectedDiagramCubicle()!.type) }}
+            </span>
+            @if (selectedDiagramCubicle()!.abbProductFamily && selectedDiagramCubicle()!.abbProductFamily !== 'Unknown') {
+              <span class="cub-detail__family">{{ selectedDiagramCubicle()!.abbProductFamily }}</span>
+            }
+            @if (selectedDiagramCubicle()!.abbArticleNumber) {
+              <code class="cub-detail__article">{{ selectedDiagramCubicle()!.abbArticleNumber }}</code>
+            }
+            <span [class]="confidenceClass(selectedDiagramCubicle()!.confidenceIndex)">
+              {{ (selectedDiagramCubicle()!.confidenceIndex * 100).toFixed(0) }}% confidence
+            </span>
+            @if (selectedDiagramCubicle()!.topologyWarning) {
+              <span class="cub-detail__warn">⚠ {{ selectedDiagramCubicle()!.topologyWarning }}</span>
+            }
+            @if (selectedDiagramCubicle()!.devices.length > 0) {
+              <span class="cub-detail__devices">
+                Devices:
+                @for (d of selectedDiagramCubicle()!.devices; track d.abbArticleNumber) {
+                  <code class="cub-detail__dev-code">{{ d.abbArticleNumber ?? d.name }}</code>
+                }
+              </span>
+            }
+          </div>
+        }
+
+      </div><!-- /diagram-outer -->
+    }
+  </section>
+
+  <!-- ── LEVEL 2: DEVICE SCHEDULE ────────────────────────────────── -->
+  <section class="l2-section card" aria-label="Level 2 device schedule">
+    <div class="l2-section__header">
+      <div>
+        <h3 class="l2-section__title">Level 2 — Device Schedule</h3>
+        @if (selectedDiagramCubicle()) {
+          <p class="l2-section__subtitle">
+            Panel #{{ selectedDiagramCubicle()!.position }} —
+            <strong>{{ typeLabel(selectedDiagramCubicle()!.type) }}</strong>
+            @if (selectedDiagramCubicle()!.abbProductFamily && selectedDiagramCubicle()!.abbProductFamily !== 'Unknown') {
+              · {{ selectedDiagramCubicle()!.abbProductFamily }}
+            }
+          </p>
+        } @else {
+          <p class="l2-section__subtitle">Select a panel above to view its device parameters.</p>
+        }
+      </div>
+      @if (cubicleDevicesLoadState() === 'loaded') {
+        <span class="l2-count">{{ selectedCubicleDevices().length }} row(s)</span>
+      }
+    </div>
+
+    @if (cubicleDevicesLoadState() === 'loading') {
+      <div class="l2-loading">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="cubicle-skeleton"><span class="skeleton skeleton--label"></span></div>
+        }
+      </div>
+    } @else if (cubicleDevicesLoadState() === 'empty') {
+      <div class="empty-state">
+        <span class="empty-state__icon" aria-hidden="true">📋</span>
+        <p class="empty-state__title">No device schedule data extracted</p>
+        <p class="empty-state__body">The document may not contain an equipment schedule table.</p>
+      </div>
+    } @else if (selectedCubicleDevices().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon" aria-hidden="true">🔍</span>
+        <p class="empty-state__title">No device data for Panel #{{ selectedDiagramPos() }}</p>
+        <p class="empty-state__body">Select a different panel or check the extracted schedule.</p>
+      </div>
+    } @else {
+      <div class="l2-table-wrap">
+        <table class="l2-table">
+          <thead>
+            <tr>
+              <th>Position</th>
+              <th>Panel Type</th>
+              <th>CB Model</th>
+              <th>CB Rating</th>
+              <th>CT Ratio</th>
+              <th>VT Ratio</th>
+              <th>Relay Model</th>
+              <th>Protection</th>
+              <th>Conf.</th>
+              <th>Page</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (dev of selectedCubicleDevices(); track dev.id) {
+              <tr>
+                <td class="l2-pos">{{ dev.functionalPosition || '—' }}</td>
+                <td>
+                  <span [class]="'l2-type l2-type--' + (dev.panelType | lowercase)">
+                    {{ dev.panelType || '—' }}
+                  </span>
+                </td>
+                <td class="l2-mono">{{ dev.cbModel || '—' }}</td>
+                <td class="l2-mono">{{ dev.cbRating || '—' }}</td>
+                <td class="l2-mono">{{ dev.ctRatio || '—' }}</td>
+                <td class="l2-mono">{{ dev.vtRatio || '—' }}</td>
+                <td class="l2-mono">{{ dev.relayModel || '—' }}</td>
+                <td>
+                  @if (dev.protectionFunctions.length > 0) {
+                    <div class="l2-pf-chips">
+                      @for (fn of dev.protectionFunctions; track fn) {
+                        <span class="prot-chip">{{ fn }}</span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td>
+                  <span [class]="deviceConfClass(dev.confidenceScore)">
+                    {{ (dev.confidenceScore * 100).toFixed(0) }}%
+                  </span>
+                </td>
+                <td class="text-muted">{{ dev.sourcePage || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  <div class="lineup-page__actions">
+    <button class="btn btn--primary" (click)="navigateNext()">Continue to Products →</button>
+  </div>
+
+</div>

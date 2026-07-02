@@ -1,0 +1,737 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "ABB Switchgear API",
+    "description": "API for RFQ document processing and ABB switchgear configuration",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/documents/upload": {
+      "post": {
+        "tags": [
+          "Documents"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "form": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/StringStringValuesKeyValuePair"
+                    }
+                  }
+                }
+              },
+              "encoding": {
+                "form": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/status": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/pages": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentPageDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentPageDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentPageDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentStatusResponse"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentStatusResponse"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentStatusResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/parameters": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExtractedParameterDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExtractedParameterDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExtractedParameterDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/lineup": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineupDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineupDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineupDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/deviations": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviationItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviationItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviationItemDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/xml": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/review": {
+      "post": {
+        "tags": [
+          "Documents"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewSubmissionRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewSubmissionRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewSubmissionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CubicleDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "abbProductFamily": {
+            "type": "string",
+            "nullable": true
+          },
+          "abbArticleNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "confidenceScore": {
+            "type": "number",
+            "format": "double"
+          },
+          "devices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviceSelectionDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviationItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deviationId": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "affectedField": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourcePageNumbers": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "suggestedValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolved": {
+            "type": "boolean"
+          },
+          "engineersComment": {
+            "type": "string",
+            "nullable": true
+          },
+          "severity": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviationReview": {
+        "type": "object",
+        "properties": {
+          "deviationId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "parameterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolution": {
+            "type": "string",
+            "nullable": true
+          },
+          "correctedValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeviceSelectionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deviceType": {
+            "type": "string",
+            "nullable": true
+          },
+          "abbArticleNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "confidenceScore": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentPageDto": {
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageType": {
+            "type": "string",
+            "nullable": true
+          },
+          "confidenceIndex": {
+            "type": "number",
+            "format": "double"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentStatusResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "overallConfidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "parameterCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cubicleCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "deviationCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unresolvedDeviationCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ExtractedParameterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "normalizedValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "confidenceIndex": {
+            "type": "number",
+            "format": "double"
+          },
+          "sourcePage": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "flaggedForReview": {
+            "type": "boolean"
+          },
+          "isAbbDefault": {
+            "type": "boolean"
+          },
+          "extractionReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "LineupDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "overallConfidence": {
+            "type": "number",
+            "format": "double"
+          },
+          "cubicles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CubicleDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReviewSubmissionRequest": {
+        "type": "object",
+        "properties": {
+          "deviationReviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeviationReview"
+            },
+            "nullable": true
+          },
+          "resolvedDeviationIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StringStringValuesKeyValuePair": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "nullable": true
+          },
+          "value": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

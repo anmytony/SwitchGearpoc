@@ -1,0 +1,139 @@
+<div class="upload-page">
+  <div class="upload-page__header">
+    <h1 class="upload-page__title">Upload RFQ Document Package</h1>
+    <p class="upload-page__subtitle">
+      Accepted formats: PDF, DOCX, JPG, PNG, TXT, CSV, JSON, XML, MD &mdash; multiple files supported
+    </p>
+  </div>
+
+  <!-- Product family selector — Switchgear or UniSec -->
+  <div class="product-selector">
+    <p class="product-selector__label">Select product family</p>
+    <div class="product-selector__options">
+      @for (product of products; track product.value) {
+        <button
+          type="button"
+          class="product-card"
+          [class.product-card--selected]="selectedProduct()?.value === product.value"
+          (click)="selectProduct(product)"
+          [attr.aria-pressed]="selectedProduct()?.value === product.value"
+        >
+          <span class="product-card__name">{{ product.name }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Drop zone -->
+  <div
+    class="drop-zone"
+    [class.drop-zone--active]="isDragOver()"
+    [class.drop-zone--has-files]="hasFiles()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (drop)="onDrop($event)"
+    role="region"
+    aria-label="File drop zone"
+  >
+    <input
+      #fileInput
+      type="file"
+      [accept]="acceptedExtensions"
+      multiple
+      class="drop-zone__input"
+      aria-label="Select files"
+      (change)="onFileInputChange($event)"
+    />
+
+    @if (!hasFiles()) {
+      <div class="drop-zone__placeholder">
+        <span class="drop-zone__icon" aria-hidden="true">📂</span>
+        <span class="drop-zone__text">Drag &amp; drop files here, or</span>
+        <button
+          type="button"
+          class="btn btn--outline"
+          (click)="fileInput.click()"
+        >
+          Browse files
+        </button>
+      </div>
+    } @else {
+      <div class="drop-zone__add-more">
+        <button
+          type="button"
+          class="btn btn--ghost btn--sm"
+          (click)="fileInput.click()"
+        >
+          + Add more files
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- File list -->
+  @if (hasFiles()) {
+    <ul class="file-list" aria-label="Selected files">
+      @for (entry of files(); let i = $index; track i) {
+        <li class="file-list__row">
+          <span class="file-list__icon" aria-hidden="true">📄</span>
+          <span class="file-list__name" [title]="entry.file.name">{{ entry.file.name }}</span>
+          <span class="file-list__size">{{ formatSize(entry.file.size) }}</span>
+          <span
+            class="status-chip file-list__status"
+            [ngClass]="statusClass(entry.status)"
+            [attr.aria-label]="'Status: ' + entry.status"
+          >
+            {{ entry.status }}
+          </span>
+          @if (!isSubmitting()) {
+            <button
+              type="button"
+              class="file-list__remove"
+              [attr.aria-label]="'Remove ' + entry.file.name"
+              (click)="removeFile(i)"
+            >
+              ✕
+            </button>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  <!-- Polling progress -->
+  @if (isSubmitting() && pollingStatus()) {
+    <div class="polling-indicator" role="status" aria-live="polite">
+      <span class="polling-indicator__spinner" aria-hidden="true"></span>
+      <span class="polling-indicator__label">{{ statusLabel() }}</span>
+    </div>
+  }
+
+  <!-- Inline error -->
+  @if (uploadError()) {
+    <div class="inline-error" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span>{{ uploadError() }}</span>
+      <button type="button" class="btn btn--sm btn--outline" (click)="retry()">
+        Retry
+      </button>
+    </div>
+  }
+
+  <!-- Submit -->
+  <div class="upload-page__actions">
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="!canSubmit()"
+      [attr.aria-disabled]="!canSubmit()"
+      (click)="submit()"
+    >
+      @if (isSubmitting()) {
+        <span class="btn__spinner" aria-hidden="true"></span>
+        Analysing&hellip;
+      } @else {
+        Analyse Documents
+      }
+    </button>
+  </div>
+</div>

@@ -1,0 +1,237 @@
+.device-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #fafafa;
+  border-radius: 8px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #999;
+  font-style: italic;
+  text-align: center;
+}
+
+.device-details-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .functional-pos {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #666;
+    font-weight: 500;
+  }
+
+  .panel-type-badge {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0.3rem 0.7rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: auto;
+  }
+}
+
+.device-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.device-card {
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  .card-header {
+    background: #f5f5f5;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e0e0e0;
+
+    .card-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #333;
+      margin: 0;
+    }
+  }
+
+  .card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+.param-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.5rem 0;
+
+  label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.9rem;
+    min-width: 100px;
+    flex-shrink: 0;
+  }
+
+  .param-value {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: flex-start;
+
+    .value {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #333;
+      word-break: break-word;
+    }
+
+    .confidence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 600;
+
+      .score {
+        font-weight: 400;
+        opacity: 0.85;
+      }
+
+      &.confidence-high {
+        background: #c8e6c9;
+        color: #2e7d32;
+      }
+
+      &.confidence-medium {
+        background: #fff9c4;
+        color: #f57f17;
+      }
+
+      &.confidence-low {
+        background: #ffccbc;
+        color: #d84315;
+      }
+    }
+
+    .source-label {
+      font-size: 0.75rem;
+      color: #999;
+      font-style: italic;
+    }
+  }
+}
+
+.protection-functions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.3rem 0;
+
+  .prot-badge {
+    background: #e8eaf6;
+    color: #3f51b5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+}
+
+.device-card--recommended {
+  border-color: #b0bec5;
+
+  .card-header {
+    background: #eceff1;
+  }
+
+  .article-code {
+    background: #e3f2fd;
+    color: #1565c0;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: monospace;
+  }
+
+  .qty-badge {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+  }
+}
+
+.no-data-notice {
+  padding: 1rem;
+  background: #f9f9f9;
+  border: 1px dashed #ccc;
+  border-radius: 6px;
+  color: #777;
+  font-size: 0.9rem;
+
+  p { margin: 0 0 0.3rem; }
+
+  .no-data-hint {
+    font-size: 0.82rem;
+    color: #aaa;
+    font-style: italic;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .device-details-panel {
+    padding: 1rem;
+  }
+
+  .param-row {
+    flex-direction: column;
+    gap: 0.3rem;
+
+    label {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  .device-details-header {
+    flex-wrap: wrap;
+
+    .panel-type-badge {
+      order: 3;
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+}

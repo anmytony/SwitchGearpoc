@@ -1,0 +1,134 @@
+{
+  "sample": "test-rfq-enterprise-massive.txt",
+  "rows_extracted": 6,
+  "instance_distribution": {
+    "1": 3,
+    "2": 2,
+    "3": 1
+  },
+  "first_10_rows": [
+    {
+      "functional_position": "MAIN SWITCHBOARD",
+      "instance_name": "MAIN-SWGR-A",
+      "row_instance_index": 1,
+      "panel_type": "220 kV",
+      "cb_model": "ABB ELF 145",
+      "cb_rating": "400 A",
+      "cb_breaking_capacity": "145 kA",
+      "ct_ratio": "2000 A",
+      "ct_accuracy_class": "\u00b10.5 %",
+      "vt_ratio": "220 kV / 110 V",
+      "vt_accuracy_class": "\u00b10.5 %",
+      "relay_model": "ABB REL670",
+      "protection_functions": "Distance Relay, Overcurrent Relay, Directional Detection, Synchrocheck Relay",
+      "confidence": ""
+    },
+    {
+      "functional_position": "SECONDARY SWITCHBOARD",
+      "instance_name": "MAIN-SWGR-A",
+      "row_instance_index": 1,
+      "panel_type": "132 kV",
+      "cb_model": "",
+      "cb_rating": "",
+      "cb_breaking_capacity": "",
+      "ct_ratio": "",
+      "ct_accuracy_class": "",
+      "vt_ratio": "",
+      "vt_accuracy_class": "",
+      "relay_model": "ABB REL670",
+      "protection_functions": "Overcurrent Level 2, Overfrequency, Underfrequency",
+      "confidence": ""
+    },
+    {
+      "functional_position": "TERTIARY SWITCHBOARD",
+      "instance_name": "MAIN-SWGR-A",
+      "row_instance_index": 1,
+      "panel_type": "30 kV",
+      "cb_model": "",
+      "cb_rating": "",
+      "cb_breaking_capacity": "",
+      "ct_ratio": "",
+      "ct_accuracy_class": "",
+      "vt_ratio": "",
+      "vt_accuracy_class": "",
+      "relay_model": "GE MiCOM P110",
+      "protection_functions": "IDMTL overcurrent relays",
+      "confidence": ""
+    },
+    {
+      "functional_position": "INCOMING TRANSFORMER & PROTECTION",
+      "instance_name": "MAIN-SWGR-B",
+      "row_instance_index": 2,
+      "panel_type": "132 kV",
+      "cb_model": "ABB ELF 145",
+      "cb_rating": "400 A",
+      "cb_breaking_capacity": "145 kA",
+      "ct_ratio": "",
+      "ct_accuracy_class": "",
+      "vt_ratio": "",
+      "vt_accuracy_class": "",
+      "relay_model": "",
+      "protection_functions": "Synchrocheck Relay",
+      "confidence": ""
+    },
+    {
+      "functional_position": "10 kV DISTRIBUTION LEVEL",
+      "instance_name": "MAIN-SWGR-B",
+      "row_instance_index": 2,
+      "panel_type": "10 kV",
+      "cb_model": "",
+      "cb_rating": "",
+      "cb_breaking_capacity": "16 kA",
+      "ct_ratio": "",
+      "ct_accuracy_class": "",
+      "vt_ratio": "",
+      "vt_accuracy_class": "",
+      "relay_model": "ABB REL670",
+      "protection_functions": "IDMTL Setting",
+      "confidence": ""
+    },
+    {
+      "functional_position": "DIRECT PASS-THROUGH TO LOCAL DISTRIBUTION",
+      "instance_name": "MAIN-SWGR-C",
+      "row_instance_index": 3,
+      "panel_type": "132 kV",
+      "cb_model": "",
+      "cb_rating": "",
+      "cb_breaking_capacity": "",
+      "ct_ratio": "",
+      "ct_accuracy_class": "",
+      "vt_ratio": "",
+      "vt_accuracy_class": "",
+      "relay_model": "",
+      "protection_functions": "Fused switches",
+      "confidence": ""
+    }
+  ],
+  "qa": {
+    "is_complete": false,
+    "missing_functional_positions": [
+      "INCOMING TRANSFORMER & PROTECTION",
+      "10 kV DISTRIBUTION LEVEL",
+      "DIRECT PASS-THROUGH TO LOCAL DISTRIBUTION"
+    ],
+    "suspected_merged_rows": [],
+    "schema_violations": [],
+    "notes": [
+      "The extracted rows do not capture all distinct functional positions from the source text. Specifically, the 'INCOMING TRANSFORMER & PROTECTION' and '10 kV DISTRIBUTION LEVEL' positions are not fully represented, and the 'DIRECT PASS-THROUGH TO LOCAL DISTRIBUTION' lacks complete details."
+    ]
+  },
+  "panel_prompt_output": {
+    "panel_type": "Feeder",
+    "functional_position": "",
+    "cb_model": "",
+    "cb_rating": "2500 A",
+    "cb_breaking_capacity": "31.5 kA",
+    "ct_ratio": "",
+    "ct_accuracy_class": "",
+    "vt_ratio": "",
+    "vt_accuracy_class": "",
+    "relay_model": "",
+    "protection_functions": "protection relay coordination",
+    "confidence": 0.8
+  }
+}

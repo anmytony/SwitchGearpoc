@@ -1,0 +1,155 @@
+/* -----------------------------------------------------------------------
+   App shell layout
+   ----------------------------------------------------------------------- */
+
+:host {
+  display: block;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f5f5f5;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 1.5rem;
+  height: 56px;
+  background: #1a1a2e;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.app-header__logo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ff0000; /* ABB red */
+}
+
+.app-header__title {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+/* Pipeline stepper */
+.pipeline-stepper {
+  flex: 1;
+  overflow-x: auto;
+}
+
+.pipeline-stepper__list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.25rem;
+}
+
+.pipeline-stepper__item {
+  flex-shrink: 0;
+}
+
+.pipeline-stepper__link {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 3px;
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+  }
+}
+
+.pipeline-stepper__item--active .pipeline-stepper__link {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-weight: 600;
+}
+
+.pipeline-stepper__item--done .pipeline-stepper__link {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pipeline-stepper__index {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.pipeline-stepper__item--active .pipeline-stepper__index {
+  background: #ff0000;
+}
+
+.pipeline-stepper__item--done .pipeline-stepper__index {
+  background: #4caf50;
+}
+
+/* Badges */
+.badge {
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.badge--warn {
+  background: #ff9800;
+  color: #000;
+}
+
+/* Confidence pill */
+.app-header__meta {
+  flex-shrink: 0;
+}
+
+.confidence-pill {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #4caf50;
+  color: #fff;
+
+  &.confidence-pill--low {
+    background: #f44336;
+  }
+}
+
+/* Main */
+.app-main {
+  flex: 1;
+  padding: 1.5rem;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
